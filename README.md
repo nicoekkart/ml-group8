@@ -3,5 +3,5 @@
 ## Group Members
   - [Freek Verschelden](mailto:Freek.Verschelden@UGent.be)
   - [Aron Minne](mailto:Aron.Minne@UGent.be)
-  - [Simon Schellaert](Simon.Schellaert@UGent.be)
-  - [Nico Ekkart](Nico.Ekkart@UGent.be)
+  - [Simon Schellaert](mailto:Simon.Schellaert@UGent.be)
+  - [Nico Ekkart](mailto:Nico.Ekkart@UGent.be)
