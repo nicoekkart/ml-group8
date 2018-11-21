@@ -9,13 +9,7 @@ from torchvision import datasets, models, transforms
 from tensorboardX import SummaryWriter
 
 from data import TransformedDataset, train_test_split_dataset
-
-
-# TODO: Create a class Logger() that also writes model parameters at the beginning
-def write_loss(writer, epoch, loss, train):
-    label = 'Train' if train else 'Val'
-    writer.add_scalar(label + '/Loss', loss, epoch)
-    print('Epoch {} - {} Loss: {:.4f}'.format(epoch, label, loss))
+from logger import write_loss
 
 
 def train(model, device, dataloader, optimizer):
@@ -58,8 +52,8 @@ def test(model, device, dataloader):
 if __name__ == '__main__':
     # Training settingmas
     parser = argparse.ArgumentParser(description='Model Training Script')
-    parser.add_argument('--batch-size', type=int, default=8, metavar='N', # TODO: Fix bug with batch size
-                        help='input batch size for training (default: 64)')
+    parser.add_argument('--batch-size', type=int, default=24, metavar='N',
+                        help='input batch size for training (default: 24)')
     parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
                         help='learning rate (default: 0.001)')
 
@@ -80,13 +74,13 @@ if __name__ == '__main__':
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ])), batch_size=24, shuffle=True)
+    ])), batch_size=args.batch_size, shuffle=True)
     val_loader = data.DataLoader(TransformedDataset(val_dataset, transforms.Compose([
         transforms.Resize(256),
         transforms.CenterCrop(224),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ])), batch_size=24, shuffle=False)
+    ])), batch_size=args.batch_size, shuffle=False)
 
     model = models.resnet152(pretrained=True)
     model.fc = nn.Linear(model.fc.in_features, num_classes)
@@ -98,6 +92,8 @@ if __name__ == '__main__':
 
     writer = SummaryWriter()
     epoch = 0
+
+    # TODO: Write all params
 
     while True:
         train_loss = train(model, device, train_loader, optimizer)
