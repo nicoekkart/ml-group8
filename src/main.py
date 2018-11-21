@@ -18,7 +18,7 @@ def train(model, device, dataloader, optimizer):
 
     for i, (inputs, labels) in enumerate(dataloader):
         if i % 10 == 0:
-            print('Train epoch {} - {}/{}', epoch, i, len(dataloader))
+            print('Train epoch {} - {}/{}'.format(epoch, i, len(dataloader)))
 
         optimizer.zero_grad()
         outputs = model(inputs.to(device))
@@ -40,7 +40,7 @@ def test(model, device, dataloader):
     with torch.no_grad():
         for i, (inputs, labels) in enumerate(dataloader):
             if i % 10 == 0:
-                print('Test epoch {} - {}/{}', epoch, i, len(dataloader))
+                print('Test epoch {} - {}/{}'.format(epoch, i, len(dataloader)))
 
             outputs = model(inputs.to(device))
             loss = criterion(outputs, labels.to(device))
@@ -82,12 +82,12 @@ if __name__ == '__main__':
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])), batch_size=args.batch_size, shuffle=False)
 
-    model = models.resnet152(pretrained=True)
+    model = models.resnet50(pretrained=True)
     model.fc = nn.Linear(model.fc.in_features, num_classes)
     model = model.to(device)
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=args.lr)
+    optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9) # TODO: Try using Adam
     scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
 
     writer = SummaryWriter()
@@ -99,11 +99,12 @@ if __name__ == '__main__':
         train_loss = train(model, device, train_loader, optimizer)
         write_loss(writer, epoch, train_loss, train=True)
 
-        val_loss = test(model, device, train_loader, epoch, writer)
+        val_loss = test(model, device, val_loader)
         write_loss(writer, epoch, val_loss, train=False)
 
         writer.add_scalar('Learning Rate', optimizer.param_groups[0]['lr'], epoch)
 
         scheduler.step()
+        epoch += 1
 
         # TODO: Save best model
