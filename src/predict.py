@@ -6,6 +6,8 @@ from torchvision import datasets, models, transforms
 from torch.optim import lr_scheduler
 from torch.utils import data
 
+import csv
+
 
 def write_predictions_csv(predictions, out_path, label_strings):
     """ Writes the predictions to a csv file. """
@@ -44,6 +46,9 @@ if __name__ == '__main__':
     # TODO: Load model
     model = models.resnet152(pretrained=True)
     model.fc = nn.Linear(model.fc.in_features, len(classes))
+
+    model.load_state_dict(torch.load('0.torch', map_location=device))
+
     model = model.to(device)
 
     model.eval()
