@@ -12,7 +12,7 @@ from data import TransformedDataset, train_test_split_dataset
 from logger import write_loss
 
 
-def train(model, device, dataloader, optimizer):
+def train(model, criterion, device, dataloader, optimizer):
     model.train()
     average_loss = 0
 
@@ -33,7 +33,7 @@ def train(model, device, dataloader, optimizer):
     return average_loss / len(dataloader.dataset)
 
 
-def test(model, device, dataloader):
+def test(model, criterion, device, dataloader):
     model.eval()
     average_loss = 0
 
@@ -82,12 +82,18 @@ if __name__ == '__main__':
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])), batch_size=args.batch_size, shuffle=False)
 
-    model = models.resnet50(pretrained=True)
+    model = models.resnet152(pretrained=True)
+
+    for param in model.parameters():
+        param.requires_grad = False
+
     model.fc = nn.Linear(model.fc.in_features, num_classes)
     model = model.to(device)
 
+
+
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9) # TODO: Try using Adam
+    optimizer = optim.SGD(model.fc.parameters(), lr=0.001, momentum=0.9) # TODO: Try using Adam
     scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
 
     writer = SummaryWriter()
@@ -96,10 +102,10 @@ if __name__ == '__main__':
     # TODO: Write all params
 
     while True:
-        train_loss = train(model, device, train_loader, optimizer)
+        train_loss = train(model, criterion, device, train_loader, optimizer)
         write_loss(writer, epoch, train_loss, train=True)
 
-        val_loss = test(model, device, val_loader)
+        val_loss = test(model, criterion, device, val_loader)
         write_loss(writer, epoch, val_loss, train=False)
 
         writer.add_scalar('Learning Rate', optimizer.param_groups[0]['lr'], epoch)
