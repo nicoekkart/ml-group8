@@ -47,22 +47,23 @@ if __name__ == '__main__':
     model = models.resnet152(pretrained=True)
     model.fc = nn.Linear(model.fc.in_features, len(classes))
 
-    model.load_state_dict(torch.load('0.torch', map_location=device))
+    model.load_state_dict(torch.load('2.torch', map_location=device))
 
     model = model.to(device)
 
     model.eval()
 
-    softmax = nn.Softmax()
+    softmax = nn.Softmax() # TODO: Fix deprecation warning
     predictions = []
 
     with torch.no_grad():
         for i, (inputs, _) in enumerate(test_loader):
+            print(i, '/', len(test_loader))
             outputs = model(inputs.to(device))
             probabilities = softmax(outputs)
 
             for j in range(probabilities.shape[0]):
-                predictions.append(list(probabilities[j].numpy()))
+                predictions.append(list(probabilities[j].cpu().numpy()))
 
     # TODO: Generate random output file name
     write_predictions_csv(predictions, 'testpred', classes)
