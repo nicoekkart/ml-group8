@@ -83,17 +83,12 @@ if __name__ == '__main__':
     ])), batch_size=args.batch_size, shuffle=False)
 
     model = models.resnet152(pretrained=True)
-
-    for param in model.parameters():
-        param.requires_grad = False
-
     model.fc = nn.Linear(model.fc.in_features, num_classes)
     model = model.to(device)
 
 
-
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(model.fc.parameters(), lr=0.001, momentum=0.9) # TODO: Try using Adam
+    optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9) # TODO: Try using Adam
     scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
 
     writer = SummaryWriter()
@@ -111,6 +106,9 @@ if __name__ == '__main__':
         writer.add_scalar('Learning Rate', optimizer.param_groups[0]['lr'], epoch)
 
         scheduler.step()
+
+        torch.save(model.state_dict(), str(epoch) + '.torch')
         epoch += 1
+
 
         # TODO: Save best model
