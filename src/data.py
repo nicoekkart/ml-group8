@@ -1,6 +1,6 @@
 import numpy as np
 
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, StratifiedKFold
 from torch.utils import data
 from torchvision import datasets, transforms
 
@@ -39,5 +39,12 @@ def train_test_split_dataset(full_dataset, test_size=0.2):
     return data.Subset(full_dataset, train_indices), data.Subset(full_dataset, test_indices)
 
 
-# TODO: Create method that returns a list of [(train_set, test_set), (train_set, test_set), ... ] for k-fold cross validation
-# See: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.StratifiedKFold.html
+def k_fold_split_dataset(full_dataset, n_splits=5):
+    skf = StratifiedKFold(n_splits, random_state=42, shuffle=True)
+
+    full_targets = np.array([target for _, target in full_dataset.samples])
+    full_inputs = np.zeros(len(full_dataset))
+
+    for train_indices, test_indices in skf.split(full_inputs, full_targets):
+        yield data.Subset(full_dataset, train_indices), data.Subset(full_dataset, test_indices)
+
