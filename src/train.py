@@ -6,9 +6,12 @@ from torch.optim import lr_scheduler
 from torch.utils import data
 from torchvision import datasets, models, transforms
 
+import numpy as np
+
+from PIL import Image
 from tensorboardX import SummaryWriter
 
-from data import TransformedDataset, train_test_split_dataset
+from data import TransformedDataset, train_test_split_dataset, k_fold_split_dataset
 from logger import write_loss
 
 
@@ -56,59 +59,81 @@ if __name__ == '__main__':
                         help='input batch size for training (default: 24)')
     parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
                         help='learning rate (default: 0.001)')
-
+    parser.add_argument('--epochs', type=int, default=10, metavar='N',
+                        help='number of epochs to train (default: 10)')
+    parser.add_argument('--splits', type=int, default=5,
+                        help='number of cross-validation splits (default: 5)')
     args = parser.parse_args()
 
     # TODO: Don't hardcode this
     num_classes = 11
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
-    # Split the full dataset in a training and validation set
     full_dataset = datasets.ImageFolder('../data/train')
-    train_dataset, val_dataset = train_test_split_dataset(full_dataset, test_size=0.2)
 
-    # Create the data loaders for the training and validation set and employ augmentations for the training data
-    train_loader = data.DataLoader(TransformedDataset(train_dataset, transforms.Compose([
-        transforms.RandomResizedCrop(224, scale=(0.4, 1)),
-        # TODO: Add rotations
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ])), batch_size=args.batch_size, shuffle=True)
-    val_loader = data.DataLoader(TransformedDataset(val_dataset, transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ])), batch_size=args.batch_size, shuffle=False)
+    best_losses = [float('inf')] * args.splits
+    best_losses_epoch = [-1] * args.splits
 
-    model = models.resnet152(pretrained=True)
-    model.fc = nn.Linear(model.fc.in_features, num_classes)
-    model = model.to(device)
+    for fold_idx, (train_dataset, val_dataset) in enumerate(k_fold_split_dataset(full_dataset, n_splits=args.splits)):
+        print('# STARTING FOLD {}/{}'.format(fold_idx, args.splits))
 
+        # Create the data loaders for the training and validation set and employ augmentations for the training data
+        train_loader = data.DataLoader(TransformedDataset(train_dataset, transforms.Compose([
+            transforms.RandomResizedCrop(224, scale=(0.4, 1)),
+            # TODO: Add rotations
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ])), batch_size=args.batch_size, shuffle=True)
+        val_loader = data.DataLoader(TransformedDataset(val_dataset, transforms.Compose([
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ])), batch_size=args.batch_size, shuffle=False)
+        # TODO: Try using test-time data augmentation
 
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9) # TODO: Try using Adam
-    scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
+        model = models.resnet152(pretrained=True)
+        model.fc = nn.Linear(model.fc.in_features, num_classes)
+        model = model.to(device)
 
-    writer = SummaryWriter()
-    epoch = 0
+        # TODO: Try freezing a few of the earlier layers
+        # model_ft = models.resnet50(pretrained=True)
+        # ct = 0
+        # for child in model_ft.children():
+        #     ct += 1
+        # if ct < 7:
+        #     for param in child.parameters():
+        #         param.requires_grad = False
 
-    # TODO: Write all params
+        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=0.9) # TODO: Try using Adam
+        scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
 
-    while True:
-        train_loss = train(model, criterion, device, train_loader, optimizer)
-        write_loss(writer, epoch, train_loss, train=True)
+        writer = SummaryWriter()
 
-        val_loss = test(model, criterion, device, val_loader)
-        write_loss(writer, epoch, val_loss, train=False)
+        # TODO: Write all params
 
-        writer.add_scalar('Learning Rate', optimizer.param_groups[0]['lr'], epoch)
+        for epoch in range(args.epochs):
+            train_loss = train(model, criterion, device, train_loader, optimizer)
+            write_loss(writer, fold_idx, epoch, train_loss, train=True)
 
-        scheduler.step()
+            val_loss = test(model, criterion, device, val_loader)
+            write_loss(writer, fold_idx, epoch, val_loss, train=False)
 
-        torch.save(model.state_dict(), str(epoch) + '.torch')
-        epoch += 1
+            #writer.add_scalar('Learning Rate', optimizer.param_groups[0]['lr'], epoch)
+            scheduler.step()
 
+            if val_loss < best_losses[fold_idx]:
+                best_losses[fold_idx] = val_loss
+                best_losses_epoch[fold_idx] = epoch
+            # TODO: Save best model
+            # torch.save(model.state_dict(), str(epoch) + '.torch')
 
-        # TODO: Save best model
+        print('Completed fold', fold_idx, 'with best loss of', best_losses[fold_idx])
+
+    # TODO: Calculate mean and stddev
+    print(best_losses)
+    print('Mean:', np.mean(best_losses))
+    print('Stddev:', np.std(best_losses))
+    print(best_losses_epoch)
