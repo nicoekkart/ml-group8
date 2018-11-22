@@ -39,3 +39,5 @@ def train_test_split_dataset(full_dataset, test_size=0.2):
     return data.Subset(full_dataset, train_indices), data.Subset(full_dataset, test_indices)
 
 
+# TODO: Create method that returns a list of [(train_set, test_set), (train_set, test_set), ... ] for k-fold cross validation
+# See: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.StratifiedKFold.html
