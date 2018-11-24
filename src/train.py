@@ -8,9 +8,6 @@ from torchvision import datasets, models, transforms
 
 import numpy as np
 
-from PIL import Image
-from tensorboardX import SummaryWriter
-
 from data import TransformedDataset, train_test_split_dataset, k_fold_split_dataset
 from logger import write_loss
 
@@ -61,8 +58,8 @@ if __name__ == '__main__':
                         help='learning rate (default: 0.001)')
     parser.add_argument('--epochs', type=int, default=10, metavar='N',
                         help='number of epochs to train (default: 10)')
-    parser.add_argument('--splits', type=int, default=5,
-                        help='number of cross-validation splits (default: 5)')
+    parser.add_argument('--splits', type=int, default=1,
+                        help='number of cross-validation splits (> 2) or 1 for no cross-validation (default: 1)')
     args = parser.parse_args()
 
     # TODO: Don't hardcode this
@@ -74,7 +71,12 @@ if __name__ == '__main__':
     best_losses = [float('inf')] * args.splits
     best_losses_epoch = [-1] * args.splits
 
-    for fold_idx, (train_dataset, val_dataset) in enumerate(k_fold_split_dataset(full_dataset, n_splits=args.splits)):
+    if args.splits > 2:
+        folds = k_fold_split_dataset(full_dataset, n_splits=args.splits)
+    else:
+        folds = [train_test_split_dataset(full_dataset, test_size=0.2)]
+
+    for fold_idx, (train_dataset, val_dataset) in enumerate(folds):
         print('# STARTING FOLD {}/{}'.format(fold_idx, args.splits))
 
         # Create the data loaders for the training and validation set and employ augmentations for the training data
@@ -98,30 +100,20 @@ if __name__ == '__main__':
         model = model.to(device)
 
         # TODO: Try freezing a few of the earlier layers
-        # model_ft = models.resnet50(pretrained=True)
-        # ct = 0
-        # for child in model_ft.children():
-        #     ct += 1
-        # if ct < 7:
-        #     for param in child.parameters():
-        #         param.requires_grad = False
 
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=0.9) # TODO: Try using Adam
         scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
 
-        writer = SummaryWriter()
-
         # TODO: Write all params
 
         for epoch in range(args.epochs):
             train_loss = train(model, criterion, device, train_loader, optimizer)
-            write_loss(writer, fold_idx, epoch, train_loss, train=True)
+            write_loss(fold_idx, epoch, train_loss, train=True)
 
             val_loss = test(model, criterion, device, val_loader)
-            write_loss(writer, fold_idx, epoch, val_loss, train=False)
+            write_loss(fold_idx, epoch, val_loss, train=False)
 
-            #writer.add_scalar('Learning Rate', optimizer.param_groups[0]['lr'], epoch)
             scheduler.step()
 
             if val_loss < best_losses[fold_idx]:
@@ -132,8 +124,7 @@ if __name__ == '__main__':
 
         print('Completed fold', fold_idx, 'with best loss of', best_losses[fold_idx])
 
-    # TODO: Calculate mean and stddev
-    print(best_losses)
+    print('Best loss per fold', best_losses)
     print('Mean:', np.mean(best_losses))
     print('Stddev:', np.std(best_losses))
-    print(best_losses_epoch)
+    print('Epoch for best loss per fold', best_losses_epoch)
