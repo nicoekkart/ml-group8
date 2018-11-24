@@ -33,7 +33,7 @@ def train_test_split_dataset(full_dataset, test_size=0.2):
     full_indices = np.arange(len(full_dataset))
     full_targets = np.array([target for _, target in full_dataset.samples])
 
-    train_indices, test_indices = train_test_split(full_indices, test_size=test_size, random_state=42,
+    train_indices, test_indices = train_test_split(full_indices, test_size=test_size, random_state=41,
                                                    stratify=full_targets)
     return data.Subset(full_dataset, train_indices), data.Subset(full_dataset, test_indices)
 

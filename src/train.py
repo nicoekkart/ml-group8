@@ -1,4 +1,5 @@
 import argparse
+import sys
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -50,6 +51,9 @@ def test(model, criterion, device, dataloader):
 
 
 if __name__ == '__main__':
+    # If you're running on Google Colab, uncomment the line below to make argument parsing work.
+    # sys.argv = ['foo']
+
     # Training settingmas
     parser = argparse.ArgumentParser(description='Model Training Script')
     parser.add_argument('--batch-size', type=int, default=24, metavar='N',
