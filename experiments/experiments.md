@@ -1,6 +1,6 @@
 # Experiments 
 
-## ResNet 152 - FC
+## 1. ResNet 152 - All layers
 
 ### Setup
 Training all layers of a pre-trained Resnet152 where the last fully-connected layer is replaced by `nn.Linear(model.fc.in_features, num_classes`).
@@ -19,3 +19,19 @@ No layers are frozen at any point during training.
   
 ### Results
 Coming soon
+
+
+# 2. ResNet 152 - FC
+
+Identical setup to experiment 1 we only train the last FC layer.
+All other layers are frozen
+
+### Results
+Coming soon
+
+
+# Ideas
+  - Increase/decrease learning rate
+  - Increase/decrease batch size
+  - Freeze convolutional layers during first part of training and then unfreeze them layer
+  - Freeze first half of convolutional layers
