@@ -2,7 +2,6 @@ import numpy as np
 
 from sklearn.model_selection import train_test_split, StratifiedKFold
 from torch.utils import data
-from torchvision import datasets, transforms
 
 
 class TransformedDataset(data.Dataset):
@@ -40,6 +39,7 @@ def train_test_split_dataset(full_dataset, test_size=0.2):
 
 
 def k_fold_split_dataset(full_dataset, n_splits=5):
+    """ Splits the dataset `n_splits` times using CV and yields tuples (train_dataset, test_dataset) """
     skf = StratifiedKFold(n_splits, random_state=42, shuffle=True)
 
     full_targets = np.array([target for _, target in full_dataset.samples])
