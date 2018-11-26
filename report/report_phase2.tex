@@ -1,0 +1,141 @@
+\documentclass[8pt, a4]{article}
+\usepackage{listings}
+\usepackage{amsmath}
+\usepackage{a4wide}
+\usepackage{pdfpages}
+\usepackage{subcaption}
+\lstset{language=Python}
+\usepackage{graphicx}
+\usepackage{url}
+\setlength{\parindent}{0pt}
+\begin{document}
+	\includepdf{voorblad.pdf}
+	\section{Introduction}
+	Problem analysis (problem type etc.) + high level discussion of approach 
+
+	\section{Data Analysis}
+	\begin{itemize}
+		\item MINIMUM: Class imbalance check and discussion how to solve (e.g. upsampling, downsampling, sci-kit learn argument)
+		\item TO ADD: other data analysis specific to images: analysis description + observation + possible consequences for model(s)
+		\item examples: label accuracy, image diversity, image shapes, image resolutions 
+		\item can be re-used from previous reports: class imbalance - LDA for class seperation - plot for image resolution - feature ranges
+		\item can be added: label accuracy check, .. 
+	\end{itemize}
+
+	\subsection{Class imbalance}
+	Description of class imbalance check + observation + how does it affect models
+	\subsection{Class seperation}
+	\subsection{Image resolutions and shape}
+	\subsection{Label accuracy}
+	\subsection{Different feature ranges}	
+	\section{Preprocessing}
+ 	Counts for expert points: things that remove variability to make problem easier (examples: scaling, transforming, rotation ? )
+	
+	\section{Dimensionality reduction}
+	\subsection{Feature extraction}
+	Things to mention 
+	\begin{itemize}
+		\item for which models
+		\item evaluating and comparing different feature selectors + literature!!
+		\item hyperparameter discussion (codebook size) 
+		\item data normalisation
+		\item POINTS: prevent data leaking during codebook training
+		\item EXTRA POINTS: 
+			\begin{enumerate}
+			\item 	outlier analysis (PCA for outlier detection  from previous report) 
+			\item  find additional features (literature or improving current feature extraction methods)
+			\item extra analysis
+		\end{enumerate}
+	\end{itemize}
+
+	\subsection{Feature selection}
+	Report or discuss at least one of the following: the more the better  \\
+	\begin{enumerate}
+		\item motivation which feature extractors have been used
+		\item PCA
+		\item LDA
+	\end{enumerate}
+	\section{Models}
+	Very important section in this phase of the competition !! \\
+	According to the feedback document, grading is based on the following. Make sure these requirements are fulfilled.
+	\begin{enumerate}
+		\item Which model was used? Was it a linear model (according to the rules)?
+		\item Was the final model (after fixing deciding on all hyperparameters) retrained on ALL the
+		labeled data?
+		\item Did the student try more than one model?
+		\item Did the student try anything fancy beyond a standard model (multi-stage model, ensemble,
+		anything innovative beyond what was seen in class)?
+	\end{enumerate}
+	
+	\subsection{Validation strategy}
+	Make sure the following items are reported
+	\begin{itemize}
+		\item validation approach for ALL models
+		\item describe split between train and validation data and which strategy was used (validation or cross-validation)
+		\item report the optimised performance measure!
+		\item class imbalance?
+	\end{itemize}
+	\section{Hyperparameter optimisation}
+ 	Things to mention:
+ 	\begin{itemize}
+ 		\item report hyperparameter approach for each model
+ 		\item correclty identify the most important model hyperparameters and optimise them based on validation scores
+ 		\item motivation on optimisation technique (grid-search or greedy)
+ 		\item describe entire optimisation flow
+ 		\item report search ranges and validation scores for each optimised parameter!
+ 	\end{itemize}
+
+	\subsection{Linear model}
+	\subsection{Non-pretrained model}
+	\subsection{Pretrained model}
+	
+	
+	\section{Supervised feature set optimisation}
+	?
+	
+	\section{Model Analysis}
+	Extensive analysis on all models based on three categories
+	\begin{itemize}
+		\item analysis on overfitting
+		\item analysis on erros
+		\item disccusion and interpretation
+	\end{itemize}
+	Example structure for linear model below
+	\subsection{Linear Model}
+	\subsubsection{Overfitting analysis}
+	Things to mention:
+	\begin{itemize}
+		\item report train scores, cross-validation scores and \textbf{leaderboard} scores
+		\item report correct performance measure (logloss), accuracy is a bonus
+		\item report on learning cureves using the correct scores (training and cross-validation)
+		\item \textbf{EXTRA POINTS}: use validation curve to discuss sensity of relevant hyperparameters
+	\end{itemize}
+	
+	\subsubsection{Error analysis}
+	Things to mention
+		\begin{itemize}
+		\item report confusion matrices
+		\item report both normalised and uunnormalised confusion matrices in case of sever class imbalance
+		\item label axes of confusion matrix!
+		\item perform a visual check i.e. look at confident but wrong predicted images 
+	\end{itemize}
+
+	\subsubsection{Discussion}
+	Things to mention
+	\begin{itemize}
+		\item discussion on scores: overfitting (between train and validate or validate and test)? low or high bias/variance? discrepancies between validation and leaderboard scores.
+		\item report both normalised and uunnormalised confusion matrices in case of sever class imbalance
+		\item label axes of confusion matrix!
+		\item perform a visual check i.e. look at confident but wrong predicted images 
+	\end{itemize}
+	\subsection{Non-pretrained Model}
+	\subsubsection{Overfitting analysis}
+	\subsubsection{Error analysis}
+	\subsubsection{Discussion}
+	\subsection{Pretrained Model}
+	\subsubsection{Overfitting analysis}
+	\subsubsection{Error analysis}
+	\subsubsection{Discussion}
+	\section{Conclusion}
+
+\end{document}
